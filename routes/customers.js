@@ -4,11 +4,7 @@ const customersController = require('../controllers/customers');
 
 router.post('/onboard', customersController.createOnboardingRequest);
 router.get('/:id', customersController.getCustomerById);
-router.post('/', (req, res) => {
-  const customerData = req.body;
-  res.status(201).json({ message: 'Customer created successfully', data: customerData });
-});
-
-
+router.get('/', customersController.getCustomers);
+router.post('/apply', customersController.apply);
 
 module.exports = router;

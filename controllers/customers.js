@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 
-exports.createOnboardingRequest = async (req, res) => {
+const createOnboardingRequest = async (req, res) => {
   const {
     fullName, gender, dob, mobile, email,
     addresses, kycDocuments, onboardingRequest, referralSource
@@ -12,24 +12,40 @@ exports.createOnboardingRequest = async (req, res) => {
 
     const [customerResult] = await conn.query(
       `INSERT INTO customers (full_name, gender, date_of_birth, mobile_number, email_address)
-      VALUES (?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?)`,
       [fullName, gender, dob, mobile, email]
     );
     const customerId = customerResult.insertId;
 
-    for (const addr of addresses) {
+    if (addresses?.length) {
+      const addressValues = addresses.map(addr => [
+        customerId,
+        addr.houseNumber,
+        addr.streetName,
+        addr.city,
+        addr.state,
+        addr.pincode,
+        addr.addressType
+      ]);
       await conn.query(
         `INSERT INTO addresses (customer_id, house_number, street_name, city, state, pincode, address_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [customerId, addr.houseNumber, addr.streetName, addr.city, addr.state, addr.pincode, addr.addressType]
+         VALUES ?`,
+        [addressValues]
       );
     }
-
-    for (const doc of kycDocuments) {
+    if (kycDocuments?.length) {
+      const kycValues = kycDocuments.map(doc => [
+        customerId,
+        doc.documentName,
+        doc.documentNumber,
+        doc.issuingAuthority,
+        doc.expiryDate || null,
+        doc.filePath
+      ]);
       await conn.query(
         `INSERT INTO kyc_documents (customer_id, document_name, document_number, issuing_authority, expiry_date, file_path)
-        VALUES (?, ?, ?, ?, ?, ?)`,
-        [customerId, doc.documentName, doc.documentNumber, doc.issuingAuthority, doc.expiryDate, doc.filePath]
+         VALUES ?`,
+        [kycValues]
       );
     }
 
@@ -53,7 +69,7 @@ exports.createOnboardingRequest = async (req, res) => {
 
     await conn.query(
       `INSERT INTO onboarding_requests (customer_id, date_of_request, source_of_request, preferred_branch_location, notes, referral_source_id)
-      VALUES (?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         customerId,
         onboardingRequest.dateOfRequest,
@@ -75,7 +91,7 @@ exports.createOnboardingRequest = async (req, res) => {
   }
 };
 
-exports.getCustomerById = async (req, res) => {
+const getCustomerById = async (req, res) => {
   const customerId = req.params.id;
   try {
     const [customers] = await pool.query(`SELECT * FROM customers WHERE id = ?`, [customerId]);
@@ -95,4 +111,19 @@ exports.getCustomerById = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+const getCustomers = (req, res) => {
+  res.send("Customer list goes here");
+};
+
+const apply = (req, res) => {
+  res.send("Apply logic goes here");
+};
+
+module.exports = {
+  createOnboardingRequest,
+  getCustomerById,
+  getCustomers,
+  apply
 };

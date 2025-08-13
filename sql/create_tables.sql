@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS loan_system;
+
+USE loan_system;
+
 CREATE TABLE IF NOT EXISTS customers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   full_name VARCHAR(100) NOT NULL,
@@ -62,5 +66,6 @@ CREATE TABLE IF NOT EXISTS employees (
   designation VARCHAR(50),
   contact_number VARCHAR(15),
   email VARCHAR(100),
-  branch
+  branch_id INT,
+  FOREIGN KEY (branch_id) REFERENCES branches(id)
 );
